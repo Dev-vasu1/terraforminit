@@ -83,3 +83,38 @@ resource "aws_db_instance" "read_replica" {
 
   skip_final_snapshot = true
 }
+resource "aws_elasticache_cluster" "redis_cluster" {
+  cluster_id           = "my-redis-cluster"
+  engine               = "redis"
+  node_type            = "cache.t3.micro"
+  num_cache_nodes      = 1
+  subnet_group_name    = aws_elasticache_subnet_group.redis_subnet_group.name
+  security_group_ids   = [aws_security_group.redis_security_group.id]
+}
+resource "aws_elasticache_subnet_group" "redis_subnet_group" {
+  name = "my-redis-subnet-group"
+  subnet_ids = [aws_subnet.name.id, aws_subnet.name2.id]
+}
+resource  "aws_security_group" "redis_security_group" {
+    name = "redis-security-group"
+    description = "Allow Redis traffic"
+    vpc_id = aws_vpc.name.id
+    ingress {
+        from_port = 6379
+        to_port = 6379   
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }    
+    ingress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
